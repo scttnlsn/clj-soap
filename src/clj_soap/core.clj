@@ -119,11 +119,13 @@
   [elem argtype]
   (.getText elem))
 
-(defn make-client [url]
-  (doto (org.apache.axis2.client.ServiceClient. nil (java.net.URL. url) nil nil)
-    (.setOptions
-      (doto (org.apache.axis2.client.Options.)
-        (.setTo (org.apache.axis2.addressing.EndpointReference. url))))))
+(defn make-client [url-or-client]
+  (if (string? url-or-client)
+    (doto (org.apache.axis2.client.ServiceClient. nil (java.net.URL. url-or-client) nil nil)
+      (.setOptions
+       (doto (org.apache.axis2.client.Options.)
+         (.setTo (org.apache.axis2.addressing.EndpointReference. url-or-client)))))
+    url-or-client))
 
 (defn make-request [op & args]
   (let [factory (org.apache.axiom.om.OMAbstractFactory/getOMFactory)
@@ -148,16 +150,16 @@
     (get-result
       op (.sendReceive client (.getName op) (apply make-request op args)))))
 
-(defn client-proxy [url]
-  (let [client (make-client url)]
+(defn client-proxy [url-or-client]
+  (let [client (make-client url-or-client)]
     (->> (for [op (axis-service-operations (.getAxisService client))]
-               [(keyword (axis-op-name op))
-                (fn soap-call [& args] (apply client-call client op args))])
-      (into {}))))
+           [(keyword (axis-op-name op))
+            (fn soap-call [& args] (apply client-call client op args))])
+         (into {}))))
 
 (defn client-fn
   "Make SOAP client function, which is called as: (x :someMethod arg1 arg2 ...)"
-  [url]
-  (let [px (client-proxy url)]
+  [url-or-client]
+  (let [px (client-proxy url-or-client)]
     (fn [opname & args]
       (apply (px opname) args))))
