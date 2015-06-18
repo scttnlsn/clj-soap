@@ -97,13 +97,27 @@
 (defmethod obj->soap-str :boolean [obj argtype] (str obj))
 (defmethod obj->soap-str :default [obj argtype] (str obj))
 
-(defmulti soap-str->obj (fn [obj argtype] argtype))
+(defmulti soap-elem->obj (fn [elem argtype] argtype))
 
-(defmethod soap-str->obj :integer [soap-str argtype] (Integer/parseInt soap-str))
-(defmethod soap-str->obj :double [soap-str argtype] (Double/parseDouble soap-str))
-(defmethod soap-str->obj :string [soap-str argtype] soap-str)
-(defmethod soap-str->obj :boolean [soap-str argtype] (Boolean/parseBoolean soap-str))
-(defmethod soap-str->obj :default [soap-str argtype] soap-str)
+(defmethod soap-elem->obj :integer
+  [elem argtype]
+  (Integer/parseInt (.getText elem)))
+
+(defmethod soap-elem->obj :double
+  [elem argtype]
+  (Double/parseDouble (.getText elem)))
+
+(defmethod soap-elem->obj :string
+  [elem argtype]
+  (.getText elem))
+
+(defmethod soap-elem->obj :boolean
+  [elem argtype]
+  (Boolean/parseBoolean (.getText elem)))
+
+(defmethod soap-elem->obj :default
+  [elem argtype]
+  (.getText elem))
 
 (defn make-client [url]
   (doto (org.apache.axis2.client.ServiceClient. nil (java.net.URL. url) nil nil)
@@ -125,10 +139,8 @@
     request))
 
 (defn get-result [op retelem]
-  (let [ret-str (.getText (first (iterator-seq (.getChildElements retelem))))]
-    (if (not (empty? ret-str))
-      (soap-str->obj ret-str (axis-op-rettype op))
-      (str retelem))))
+  (let [elem (first (iterator-seq (.getChildElements retelem)))]
+    (soap-elem->obj elem (axis-op-rettype op))))
 
 (defn client-call [client op & args]
   (if (isa? (class op) org.apache.axis2.description.OutOnlyAxisOperation)
@@ -149,4 +161,3 @@
   (let [px (client-proxy url)]
     (fn [opname & args]
       (apply (px opname) args))))
-
