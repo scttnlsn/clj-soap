@@ -130,13 +130,13 @@
 (defn make-request [op & args]
   (let [factory (org.apache.axiom.om.OMAbstractFactory/getOMFactory)
         request (.createOMElement
-                  factory (javax.xml.namespace.QName.
-                            (axis-op-namespace op) (axis-op-name op)))
+                 factory (javax.xml.namespace.QName.
+                          (axis-op-namespace op) (axis-op-name op)))
         op-args (axis-op-args op)]
     (doseq [[argval argtype] (map list args op-args)]
       (.addChild request
                  (doto (.createOMElement
-                         factory (javax.xml.namespace.QName. (axis-op-namespace op) (:name argtype)))
+                        factory (javax.xml.namespace.QName. (:name argtype)))
                    (.setText (obj->soap-str argval (:type argtype))))))
     request))
 
