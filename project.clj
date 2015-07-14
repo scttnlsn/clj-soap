@@ -1,4 +1,4 @@
-(defproject org.clojars.scttnlsn/clj-soap "0.2.1"
+(defproject org.clojars.scttnlsn/clj-soap "0.2.2"
   :description "SOAP Client and Server using Apache Axis2."
   :url "https://github.com/seancorfield/clj-soap"
   :license {:name "Eclipse Public License"
